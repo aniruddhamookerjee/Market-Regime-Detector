@@ -1,0 +1,16 @@
+# Ignore video directory
+video/
+
+# Ignore stitch metadata
+.stitch/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+.DS_Store
