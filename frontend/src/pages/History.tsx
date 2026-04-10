@@ -1,9 +1,8 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export const History = () => {
   const [filter, setFilter] = useState("All");
-  const navigate = useNavigate();
   const data: any[] = [];
 
   return (

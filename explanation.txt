@@ -1,0 +1,39 @@
+RegimeRadar: Market Regime Detector
+===================================
+
+This document explains the full workflow, the mathematical models used, and the technology stack powering the RegimeRadar application.
+
+1. Technology Stack
+-------------------
+The project is built using a modern decoupled architecture:
+
+*   **Backend:** Python 3, FastAPI (for defining REST APIs asynchronously), Uvicorn (ASGI server).
+*   **Data Processing & Modeling:** Pandas, NumPy, scikit-learn, yfinance (for downloading historical stock data), and hmmlearn.
+*   **Frontend:** React 19, TypeScript, Vite (bundler), React Router DOM.
+*   **Styling & UI Components:** Tailwind CSS, PostCSS, Radix UI primitives (e.g., shadcn-ui components), Lucide React (icons), and Recharts (for rendering dynamic, interactive price and regime charts).
+
+2. Model Used
+-------------
+The application supports multiple unsupervised machine learning models to cluster historical financial data into distinct market regimes (typically four: Bull, Bear, Sideways, Volatile). By default, it uses a Gaussian Mixture Model (GMM).
+
+Available models engineered in `regime_model.py`:
+*   **Gaussian Mixture Models (GMM) [Default]:** Probabilistic clustering that captures the variance and covariance of market features (returns, volatility, etc.), allowing for soft assignments and confidence metrics.
+*   **Hidden Markov Models (HMM):** Probabilistic sequence modeling that also learns the transition probabilities between different market regimes over time, honoring sequential dependency in financial markets.
+*   **K-Means Clustering:** Distance-based, hard-assignment clustering baseline.
+
+3. Full Application Workflow
+----------------------------
+1.  **User Request:** The user inputs a stock ticker symbol (e.g., "SPY") and selects a target time period and model strategy from the React frontend.
+2.  **Data Fetching:** The React client makes an HTTP POST request to the FastAPI backend (`/analyze` endpoint). The backend pulls the corresponding historical daily price and volume data using the `yfinance` library (`data_fetcher.py`).
+3.  **Feature Engineering:** The backend calculates several key quantitative indicators from the raw prices (`feature_engineer.py`), including:
+    *   Rolling Returns (percentage changes).
+    *   Volatility (standard deviation over a 20-day window).
+    *   Momentum (10-day returns).
+    *   Trend Signals (e.g., Short-term vs. Long-term Moving Average Differentials).
+    *   The features are standardized/scaled to be fed into the machine learning models.
+4.  **Regime Modeling & Prediction:** The selected unsupervised model (e.g., GMM) is mathematically fit to the scaled features (`regime_model.py`). It assigns each trading day to an abstract numerical cluster (0 to 3) and outputs continuous confidence probability scores.
+5.  **Interpretation & Smoothing (`interpreter.py`):**
+    *   The abstract cluster labels are translated into semantic regime names (Bull, Bear, Volatile, Sideways) dynamically by analyzing the collective characteristics of each cluster map.
+    *   A smoothing process is applied over the resulting timeline sequence to filter out short-term macro noise and prevent erratic flashing between regimes in the UI.
+6.  **Metric Aggregation & Recommendations:** The system isolates the "current regime", evaluates its streak length/duration, calculates secondary transition risk probabilities, and filters out aggregate metrics (like average expected returns or historical volatility) to only reflect days identical to the *current* market regime state. Lastly, it provisions an actionable portfolio recommendation (`decision_layer.py`).
+7.  **Response & Visualization:** The backend serializes the current predicted regime metadata, confidence levels, tailored scenario metrics, continuous historical timeline, and a rich time-series chart bundle payload into JSON. This data is rendered by the React application via cleanly styled glassmorphic dashboards using Recharts and Tailwind CSS.

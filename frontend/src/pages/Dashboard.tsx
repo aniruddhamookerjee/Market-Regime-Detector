@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { RegimeCard } from "../components/RegimeCard";
 import { PriceChart } from "../components/PriceChart";
@@ -23,7 +23,8 @@ export const Dashboard = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8000/analyze", {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const res = await fetch(`${apiUrl}/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ticker, model_type: model.toLowerCase(), period: period.toLowerCase() })
